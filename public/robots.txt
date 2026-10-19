@@ -1,0 +1,6 @@
+# Comandaí — https://sistemacomandai.com.br
+User-agent: *
+Allow: /
+Disallow: /404
+
+Sitemap: https://sistemacomandai.com.br/sitemap.xml

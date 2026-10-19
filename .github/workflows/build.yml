@@ -1,0 +1,29 @@
+# Confere a cada push e pull request que o site compila e que todas as páginas
+# saem pré-renderizadas com título, descrição e canonical.
+name: Build
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build e conferência de SEO
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Build de produção (com pré-renderização)
+        run: npm run build
+      - name: Conferir SEO das páginas
+        run: node scripts/conferir-seo.mjs
