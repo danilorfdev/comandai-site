@@ -115,7 +115,7 @@ import { IconeComponent } from '../ui/icone.component';
         <div class="pilha" style="gap: 6px">
           <p class="rotulo">Planos</p>
           <p class="preco-chamada">A partir de R$ {{ preco }} por mês</p>
-          <p class="suave">Todas as funções em todos os planos. Você escolhe pelo número de mesas.</p>
+          <p class="suave">O Essencial já faz o ciclo completo da mesa, do QR Code à conta fechada.</p>
         </div>
         <a class="btn btn-primario btn-g" routerLink="/planos">Ver os planos</a>
       </div>

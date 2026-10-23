@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DUVIDAS_PLANOS, PLANOS, brl } from '../core/conteudo';
+import { COMPARACAO, DUVIDAS_PLANOS, PLANOS, brl } from '../core/conteudo';
 import { SITE, cadastroUrl } from '../core/site';
 import { IconeComponent } from '../ui/icone.component';
 
@@ -17,14 +17,14 @@ const MOSTRAR_FUNDADORES = true;
     <section class="container abertura-planos">
       <p class="rotulo">Planos e preços</p>
       <h1 class="titulo-pagina">Um plano para cada tamanho de salão</h1>
-      <p class="abertura">Todas as funções estão em todos os planos. Você escolhe pelo número de mesas e pode trocar quando quiser.</p>
+      <p class="abertura">O Essencial já faz o ciclo completo da mesa, do QR Code à conta fechada. Os outros planos somam gestão, mais mesas e atendimento dedicado. Dá para trocar quando quiser.</p>
       <div class="seletor" role="group" aria-label="Forma de pagamento">
         <button type="button" [class.ativo]="periodo() === 'mensal'" [attr.aria-pressed]="periodo() === 'mensal'"
                 (click)="periodo.set('mensal')">Mensal</button>
         <button type="button" [class.ativo]="periodo() === 'anual'" [attr.aria-pressed]="periodo() === 'anual'"
                 (click)="periodo.set('anual')">Anual <span class="selo selo-mostarda">2 meses grátis</span></button>
       </div>
-      <p class="suave pequeno">14 dias grátis em qualquer plano, sem cartão de crédito.</p>
+      <p class="suave pequeno">14 dias grátis com tudo do Profissional liberado, sem cartão de crédito.</p>
     </section>
 
     @if (fundadores) {
@@ -52,7 +52,8 @@ const MOSTRAR_FUNDADORES = true;
             </p>
             <p class="cobranca">{{ p.cobranca }}</p>
             <a class="btn" [class.btn-claro]="p.destaque" [class.btn-contorno]="!p.destaque" [href]="cadastro">Testar 14 dias grátis</a>
-            <ul class="lista-check">
+            @if (p.inclui) { <p class="inclui">{{ p.inclui }}</p> }
+            <ul class="lista-check" [class.continua]="p.inclui">
               @for (i of p.itens; track i.forte) {
                 <li><cs-icone nome="check" [tamanho]="20" [traco]="2.5" /><span><strong>{{ i.forte }}</strong> {{ i.resto }}</span></li>
               }
@@ -70,7 +71,7 @@ const MOSTRAR_FUNDADORES = true;
           <h2 id="comparar" class="titulo-secao">Compare os planos</h2>
         </div>
         <div class="tabela-caixa">
-          <table>
+          <table aria-labelledby="comparar">
             <thead>
               <tr>
                 <th scope="col">O que vem no plano</th>
@@ -79,16 +80,26 @@ const MOSTRAR_FUNDADORES = true;
                 <th scope="col">Ilimitado</th>
               </tr>
             </thead>
-            <tbody>
-              @for (l of comparacao; track l[0]) {
-                <tr>
-                  <th scope="row">{{ l[0] }}</th>
-                  <td>{{ l[1] }}</td>
-                  <td class="col-destaque">{{ l[2] }}</td>
-                  <td>{{ l[3] }}</td>
-                </tr>
-              }
-            </tbody>
+            @for (g of comparacao; track g.nome) {
+              <tbody>
+                <tr class="grupo"><th scope="colgroup" colspan="4">{{ g.nome }}</th></tr>
+                @for (l of g.linhas; track l.nome) {
+                  <tr>
+                    <th scope="row">{{ l.nome }}</th>
+                    @for (v of l.valores; track $index) {
+                      <td [class.col-destaque]="$index === 1">
+                        @switch (v) {
+                          @case ('sim') { <span class="sim"><cs-icone nome="check" [tamanho]="20" [traco]="2.5" /><span class="sr">Incluso</span></span> }
+                          @case ('nao') { <span class="nao" aria-hidden="true">—</span><span class="sr">Não incluso</span> }
+                          @case ('breve') { <span class="breve">Em breve</span> }
+                          @default { {{ v }} }
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            }
           </table>
         </div>
       </div>
@@ -146,13 +157,22 @@ const MOSTRAR_FUNDADORES = true;
     .destaque .lista-check { border-top-color: var(--borda-escura); }
     .lista-check cs-icone { margin-top: 2px; color: var(--sucesso); }
     .destaque .lista-check cs-icone { color: var(--destaque); }
+    .inclui { margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--borda); font-weight: 700; font-size: 15px; }
+    .destaque .inclui { border-top-color: var(--borda-escura); }
+    .plano .lista-check.continua { margin-top: 0; padding-top: 4px; border-top: 0; }
     .centro { text-align: center; margin-top: 20px; }
-    .tabela-caixa { overflow-x: auto; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--fundo); }
+    .tabela-caixa { position: relative; overflow-x: auto; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--fundo); }
     table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 15px; }
     th, td { text-align: left; padding: 14px 20px; border-top: 1px solid var(--borda); }
     thead th { border-top: 0; padding: 18px 20px; font-family: var(--display); font-weight: 600; }
     thead th:first-child { font-family: var(--corpo); color: var(--texto-suave); }
     tbody th { font-weight: 600; }
+    tr.grupo th { background: var(--fundo-alt); padding: 10px 20px; font-family: var(--display); font-size: 13px; font-weight: 600;
+                  letter-spacing: 1.2px; text-transform: uppercase; color: var(--marca-forte); }
+    .sim { display: inline-flex; color: var(--sucesso); }
+    .nao { color: var(--borda-forte); }
+    .breve { display: inline-flex; padding: 2px 10px; border-radius: 999px; background: var(--fundo-alt); border: 1px solid var(--borda);
+             font-size: 12px; font-weight: 700; color: var(--texto-suave); white-space: nowrap; }
     .col-destaque { background: #fdf0e6; }
     thead .col-destaque { color: var(--marca-forte); }
     .estreito { max-width: 868px; }
@@ -181,16 +201,5 @@ export class PlanosComponent {
     });
   });
 
-  readonly comparacao = [
-    ['Mesas', 'até 15', 'até 50', 'sem limite'],
-    ['Usuários da equipe', '3', '10', 'sem limite'],
-    ['Pedido pelo QR Code da mesa', 'Incluso', 'Incluso', 'Incluso'],
-    ['Tela da cozinha com alarme', 'Incluso', 'Incluso', 'Incluso'],
-    ['Garçom lança pedido pelo celular', 'Incluso', 'Incluso', 'Incluso'],
-    ['Mapa do salão, juntar e transferir mesas', 'Incluso', 'Incluso', 'Incluso'],
-    ['Adicionais, observações e esgotado', 'Incluso', 'Incluso', 'Incluso'],
-    ['Painel de vendas e histórico', 'Incluso', 'Incluso', 'Incluso'],
-    ['Implantação', 'Você mesmo, pelo sistema', 'Você mesmo, pelo sistema', 'Assistida pela nossa equipe'],
-    ['Suporte', 'WhatsApp e e-mail', 'WhatsApp e e-mail', 'Prioritário'],
-  ];
+  readonly comparacao = COMPARACAO;
 }

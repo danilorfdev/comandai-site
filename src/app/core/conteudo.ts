@@ -11,35 +11,109 @@ export interface Plano {
   /** Centavos por mês no plano anual (cobrado 12x esse valor de uma vez). */
   anual: number;
   destaque?: boolean;
+  /** Frase acima da lista: "Tudo do Essencial, mais:". Vazio no primeiro plano. */
+  inclui: string;
   itens: { forte: string; resto: string }[];
 }
 
+/**
+ * O que cada plano tem. O Essencial faz o ciclo completo da mesa; o Profissional
+ * soma gestão e volume; o Ilimitado tira os limites e traz atendimento dedicado.
+ * Mantenha igual à liberação de recursos por plano no comandai-api.
+ */
 export const PLANOS: Plano[] = [
   {
     id: 'essencial', nome: 'Essencial', publico: 'Lanchonete, açaí, bar pequeno', mensal: 8990, anual: 7490,
+    inclui: '',
     itens: [
-      { forte: 'Até 15 mesas', resto: 'com QR Code próprio' },
-      { forte: '3 usuários', resto: 'na equipe' },
-      { forte: 'Todas as funções', resto: 'do sistema' },
+      { forte: 'Até 15 mesas', resto: 'e 3 usuários' },
+      { forte: 'Pedido pelo QR Code', resto: 'com mesa protegida' },
+      { forte: 'Cardápio com fotos,', resto: 'adicionais e esgotado' },
+      { forte: 'Tela da cozinha', resto: 'com alarme' },
+      { forte: 'Garçom no celular', resto: 'e venda de balcão' },
+      { forte: 'Juntar e transferir', resto: 'mesas' },
+      { forte: 'Dividir a conta', resto: 'por pessoa e pagamento misto' },
+      { forte: 'Resumo do dia', resto: 'e histórico de 30 dias' },
       { forte: 'Suporte', resto: 'por WhatsApp e e-mail' },
     ],
   },
   {
     id: 'profissional', nome: 'Profissional', publico: 'Restaurante e pizzaria de porte médio', mensal: 14990, anual: 12490, destaque: true,
+    inclui: 'Tudo do Essencial, mais:',
     itens: [
-      { forte: 'Até 50 mesas', resto: 'com QR Code próprio' },
-      { forte: '10 usuários', resto: 'na equipe' },
-      { forte: 'Todas as funções', resto: 'do sistema' },
-      { forte: 'Suporte', resto: 'por WhatsApp e e-mail' },
+      { forte: 'Até 50 mesas', resto: 'e 10 usuários' },
+      { forte: 'Mapa visual do salão', resto: 'com editor' },
+      { forte: 'Conta separada por item', resto: 'dentro da mesa' },
+      { forte: 'Tempo de preparo', resto: 'e posição na fila no celular' },
+      { forte: 'Painel de vendas', resto: 'com horários de pico e mais vendidos' },
+      { forte: 'Contas a receber', resto: 'e histórico completo' },
     ],
   },
   {
     id: 'ilimitado', nome: 'Ilimitado', publico: 'Casas grandes e alto movimento', mensal: 24990, anual: 20790,
+    inclui: 'Tudo do Profissional, mais:',
     itens: [
-      { forte: 'Mesas sem limite', resto: '' },
-      { forte: 'Usuários sem limite', resto: '' },
-      { forte: 'Implantação assistida', resto: 'com a sua equipe' },
+      { forte: 'Mesas e usuários', resto: 'sem limite' },
+      { forte: 'Implantação assistida', resto: 'pela nossa equipe' },
       { forte: 'Suporte prioritário', resto: 'no horário do salão' },
+    ],
+  },
+];
+
+/** Célula da comparação: incluso, não incluso, em breve, ou um texto (limites, suporte). */
+export type Celula = 'sim' | 'nao' | 'breve' | string;
+export interface LinhaComparacao { nome: string; valores: [Celula, Celula, Celula] }
+export interface GrupoComparacao { nome: string; linhas: LinhaComparacao[] }
+
+/** Tabela "Compare os planos", na ordem Essencial, Profissional, Ilimitado. */
+export const COMPARACAO: GrupoComparacao[] = [
+  {
+    nome: 'Limites', linhas: [
+      { nome: 'Mesas', valores: ['até 15', 'até 50', 'sem limite'] },
+      { nome: 'Usuários da equipe', valores: ['3', '10', 'sem limite'] },
+    ],
+  },
+  {
+    nome: 'Na mesa', linhas: [
+      { nome: 'Pedido pelo QR Code com mesa protegida', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Cardápio com fotos, adicionais e observações', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Pedir a conta pelo celular', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Tempo de preparo e posição na fila no celular', valores: ['nao', 'sim', 'sim'] },
+      { nome: 'Chamar garçom pelo celular', valores: ['breve', 'breve', 'breve'] },
+    ],
+  },
+  {
+    nome: 'Cozinha e salão', linhas: [
+      { nome: 'Tela da cozinha com alarme', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Esgotado com um toque', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Garçom lança pedido pelo celular', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Venda de balcão', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Juntar e transferir mesas', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Mapa visual do salão com editor', valores: ['nao', 'sim', 'sim'] },
+      { nome: 'Impressão automática, separando cozinha e bar', valores: ['nao', 'breve', 'breve'] },
+    ],
+  },
+  {
+    nome: 'Caixa', linhas: [
+      { nome: 'Fechar a conta com desconto e troco', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Dividir por pessoa e pagamento misto', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Conta separada por item e "receber e manter a mesa"', valores: ['nao', 'sim', 'sim'] },
+      { nome: 'Contas a receber', valores: ['nao', 'sim', 'sim'] },
+    ],
+  },
+  {
+    nome: 'Gestão', linhas: [
+      { nome: 'Resumo de vendas do dia', valores: ['sim', 'sim', 'sim'] },
+      { nome: 'Histórico de contas', valores: ['últimos 30 dias', 'completo', 'completo'] },
+      { nome: 'Painel de vendas (comparação com a semana, mais vendidos, horários de pico)', valores: ['nao', 'sim', 'sim'] },
+      { nome: 'Exportar relatórios em planilha', valores: ['nao', 'breve', 'breve'] },
+      { nome: 'Várias lojas na mesma conta', valores: ['nao', 'nao', 'breve'] },
+    ],
+  },
+  {
+    nome: 'Atendimento', linhas: [
+      { nome: 'Implantação', valores: ['Você mesmo, pelo sistema', 'Você mesmo, pelo sistema', 'Assistida pela nossa equipe'] },
+      { nome: 'Suporte', valores: ['WhatsApp e e-mail', 'WhatsApp e e-mail', 'Prioritário'] },
     ],
   },
 ];
@@ -80,8 +154,9 @@ export const DUVIDAS: GrupoPerguntas[] = [
   },
   {
     id: 'planos', nome: 'Planos e pagamento', perguntas: [
-      { pergunta: 'Quanto custa?', resposta: `A partir de R$ ${brl(menorPreco)} por mês no plano anual do Essencial. Todas as funções estão em todos os planos; a diferença é o número de mesas e de usuários.` },
+      { pergunta: 'Quanto custa?', resposta: `A partir de R$ ${brl(menorPreco)} por mês no plano anual do Essencial, que já faz o ciclo completo da mesa: QR Code, cozinha e conta fechada. O Profissional soma o mapa do salão, a conta separada por item e o painel de vendas; o Ilimitado tira os limites e inclui implantação assistida.` },
       { pergunta: 'Preciso de cartão de crédito para testar?', resposta: 'Não. Você cria a conta, usa por 14 dias com tudo liberado e só escolhe o plano se quiser continuar.' },
+      { pergunta: 'Qual plano o teste grátis libera?', resposta: 'O teste libera o Profissional por 14 dias, para você conhecer tudo. No fim, escolhe o plano que cabe no seu salão; nada do que foi cadastrado se perde.' },
       { pergunta: 'Posso trocar de plano depois?', resposta: 'Pode, a qualquer momento. Se o salão crescer, você muda para um plano com mais mesas e nada do que já está cadastrado se perde.' },
       { pergunta: 'Como funciona o pagamento?', resposta: 'No mensal, a cobrança é feita todo mês. No anual, você paga os 12 meses de uma vez, à vista ou no Pix, e economiza o equivalente a 2 meses.' },
       { pergunta: 'Tem fidelidade ou multa para cancelar?', resposta: 'No plano mensal, não: você cancela quando quiser e o acesso vale até o fim do mês pago. [CONFIRME A REGRA DO PLANO ANUAL]' },

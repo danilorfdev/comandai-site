@@ -32,7 +32,7 @@ const OFERTAS = {
   offers: PLANOS.map((p) => ({
     '@type': 'Offer',
     name: `Plano ${p.nome}`,
-    description: p.itens.map((i) => `${i.forte} ${i.resto}`.trim()).join(', '),
+    description: [p.inclui.replace(/,? mais:$/, ''), ...p.itens.map((i) => `${i.forte} ${i.resto}`.trim())].filter(Boolean).join(', '),
     price: preco(p.mensal),
     priceCurrency: 'BRL',
     url: `${SITE.url}/planos`,
@@ -69,7 +69,7 @@ export const routes: Routes = [
     data: seo({
       titulo: 'Planos e preços · Comandaí',
       nome: 'Planos',
-      descricao: `Sistema de comanda pelo QR Code a partir de R$ ${preco(menorPreco).replace('.', ',')} por mês. Todas as funções em todos os planos. 14 dias grátis, sem cartão.`,
+      descricao: `Sistema de comanda pelo QR Code a partir de R$ ${preco(menorPreco).replace('.', ',')} por mês. Do pedido na mesa à conta fechada. 14 dias grátis, sem cartão.`,
       caminho: '/planos',
       dados: [OFERTAS],
     }),
